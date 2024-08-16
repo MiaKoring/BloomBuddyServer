@@ -7,7 +7,6 @@
 
 import Vapor
 import Fluent
-import SwiftChameleon
 import Foundation
 
 struct SensorController: RouteCollection {
@@ -25,7 +24,7 @@ struct SensorController: RouteCollection {
             throw Abort(.badRequest, reason: "Invalid Value: Not conform to Double")
         }
         
-        let updated = Date().timeIntervalSinceReferenceDate.int
+        let updated = Int(Date().timeIntervalSinceReferenceDate)
         
         try await req.db.transaction { db in
             sensor.updated = updated
