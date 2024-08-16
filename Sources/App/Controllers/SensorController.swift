@@ -21,9 +21,7 @@ struct SensorController: RouteCollection {
     @Sendable func updateData(req: Request) async throws -> String {
         let sensor = try req.auth.require(Sensor.self)
         
-        let body = req.body.string
-        
-        guard let double = body?.toDouble else {
+        guard let body = req.body.string, let double = Double(body) else {
             throw Abort(.badRequest, reason: "Invalid Value: Not conform to Double")
         }
         
