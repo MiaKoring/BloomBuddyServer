@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "BloomBuddyServer",
     platforms: [
-       .macOS(.v13)
+       .macOS(.v14)
     ],
     dependencies: [
         // 💧 A server-side Swift web framework.
@@ -15,6 +15,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent-postgres-driver.git", from: "2.8.0"),
         // 🔵 Non-blocking, event-driven networking for Swift. Used for custom executors
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
+        .package(url: "https://github.com/simon-zwicker/SwiftChameleon.git", branch: "main"),
     ],
     targets: [
         .executableTarget(
@@ -25,6 +26,7 @@ let package = Package(
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
+                .product(name: "SwiftChameleon", package: "SwiftChameleon"),
             ],
             swiftSettings: swiftSettings
         ),
