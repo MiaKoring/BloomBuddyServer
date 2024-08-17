@@ -11,8 +11,8 @@ public func configure(_ app: Application) async throws {
     app.databases.use(DatabaseConfigurationFactory.postgres(configuration: .init(
         hostname: Environment.get("DATABASE_HOST") ?? "localhost",
         port: Environment.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? SQLPostgresConfiguration.ianaPortNumber,
-        username: Environment.get("DATABASE_USERNAME") ?? "miakoring",
-        password: Environment.get("DATABASE_PASSWORD") ?? "L!fe.sucks",
+        username: Environment.get("DATABASE_USERNAME") ?? "",
+        password: Environment.get("DATABASE_PASSWORD") ?? "",
         database: Environment.get("DATABASE_NAME") ?? "vapor_database",
         tls: .prefer(try .init(configuration: .clientDefault)))
     ), as: .psql)
