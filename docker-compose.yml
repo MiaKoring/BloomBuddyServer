@@ -20,6 +20,7 @@ version: '3.7'
 
 x-shared_environment: &shared_environment
   LOG_LEVEL: ${LOG_LEVEL:-debug}
+  JWT_KEY: ''
 
 services:
   app:

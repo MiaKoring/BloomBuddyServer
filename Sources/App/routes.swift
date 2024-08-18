@@ -1,9 +1,7 @@
 import Fluent
 import Vapor
 
-func routes(_ app: Application) throws {
-    let protected = app
-    
+func routes(_ app: Application) throws {    
     app.get { req async in
         "It works!"
     }

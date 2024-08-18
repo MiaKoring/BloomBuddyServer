@@ -11,17 +11,23 @@ public func configure(_ app: Application) async throws {
     app.databases.use(DatabaseConfigurationFactory.postgres(configuration: .init(
         hostname: Environment.get("DATABASE_HOST") ?? "localhost",
         port: Environment.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? SQLPostgresConfiguration.ianaPortNumber,
-        username: Environment.get("DATABASE_USERNAME") ?? "name",
-        password: Environment.get("DATABASE_PASSWORD") ?? "pw",
+        username: Environment.get("DATABASE_USERNAME") ?? "",
+        password: Environment.get("DATABASE_PASSWORD") ?? "",
         database: Environment.get("DATABASE_NAME") ?? "vapor_database",
         tls: .prefer(try .init(configuration: .clientDefault)))
     ), as: .psql)
     
-    try await app.migrations.add(UserMigration())
-    try await app.migrations.add(SensorMigration())
+    //Migrations
+    app.migrations.add(UserMigration())
+    app.migrations.add(SensorMigration())
     
+    //jwt
+    guard let jwtKey = Environment.get("JWT_KEY")?.data(using: .utf8) else {
+        throw Abort(.internalServerError, reason: "JWT_KEY empty")
+    }
+    await app.jwt.keys.add(hmac: .init(key: SymmetricKey(data: jwtKey)), digestAlgorithm: .sha256)
     
     // register routes
-    
     try routes(app)
 }
+
