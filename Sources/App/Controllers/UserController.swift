@@ -18,6 +18,7 @@ struct UserController: RouteCollection {
         protected.post("sensors", use: addSensor)
         protected.get("sensors", use: sensors)
         protected.get("sensors", ":id", use: sensor)
+        protected.delete(use: delete)
     }
     
     @Sendable func create(req: Request) async throws -> String {
@@ -103,5 +104,13 @@ struct UserController: RouteCollection {
         }
         
         return "\(updated):\(value)"
+    }
+    
+    @Sendable func delete(req: Request) async throws -> String {
+        let user = try req.auth.require(User.self)
+        
+        try await user.delete(on: req.db)
+        
+        return "deleted:\(user.name)"
     }
 }
