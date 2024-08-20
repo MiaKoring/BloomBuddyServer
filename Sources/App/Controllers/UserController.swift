@@ -119,7 +119,7 @@ struct UserController: RouteCollection {
         }
         
         guard let userID = user.id else {
-            throw Abort(.internalServerError, reason: "User has no ID")
+            throw Abort(.internalServerError, reason: "User doesn't have ID")
         }
         
         let sensor = try await Sensor.query(on: req.db)
@@ -160,7 +160,7 @@ struct UserController: RouteCollection {
         let payload = try await req.jwt.verify(as: JWTUserPayload.self)
         
         guard let id = UUID(uuidString: payload.subject.value) else {
-            throw Abort(.internalServerError, reason: "User has no ID")
+            throw Abort(.internalServerError, reason: "User doesn't have ID")
         }
         
         guard let user = try await User.query(on: req.db)
