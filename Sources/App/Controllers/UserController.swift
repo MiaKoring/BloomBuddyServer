@@ -21,6 +21,7 @@ struct UserController: RouteCollection {
         users.post("sensors", use: addSensor)
         users.get("sensors", use: sensors)
         users.get("sensors", ":id", use: sensor)
+        users.get("sensors", "all", use: allSensorData)
         users.get("info", use: info)
     }
     
@@ -170,5 +171,28 @@ struct UserController: RouteCollection {
         }
         
         return Response(status: .ok, body: .init(data: jsonUser))
+    }
+    
+    @Sendable func allSensorData(req: Request) async throws -> Response {
+        let payload = try await req.jwt.verify(as: JWTUserPayload.self)
+        
+        guard let id = UUID(uuidString: payload.subject.value) else {
+            throw Abort(.internalServerError, reason: "User doesn't have ID")
+        }
+        
+        guard let user = try await User.query(on: req.db)
+            .filter(\.$id == id)
+            .first() else {
+            throw Abort(.internalServerError, reason: "user not found")
+        }
+        
+        let sensors = try await Sensor.query(on: req.db)
+            .filter(\.$id ~~ user.sensors)
+            .filter(\.$owner == id)
+            .all()
+        
+        let jsonData = try JSONEncoder().encode(sensors)
+        
+        return Response(status: .ok, body: .init(data: jsonData))
     }
 }
