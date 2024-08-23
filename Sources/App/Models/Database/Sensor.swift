@@ -15,6 +15,9 @@ final class Sensor: Model, Authenticatable {
     @ID(key: .id)
     var id: UUID?
     
+    @Field(key: "name")
+    var name: String
+    
     @Field(key: "latest")
     var latest: Double?
     
@@ -26,8 +29,9 @@ final class Sensor: Model, Authenticatable {
     
     init() { }
     
-    init(id: UUID? = nil, latest: Double? = nil, updated: Int? = nil, owner: UUID) {
+    init(id: UUID? = nil, name: String, latest: Double? = nil, updated: Int? = nil, owner: UUID) {
         self.id = id
+        self.name = name
         self.latest = latest
         self.updated = updated
         self.owner = owner

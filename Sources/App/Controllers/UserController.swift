@@ -22,6 +22,7 @@ struct UserController: RouteCollection {
         users.get("sensors", use: sensors)
         users.get("sensors", ":id", use: sensor)
         users.get("sensors", "all", use: allSensorData)
+        users.patch("sensors", ":id", use: changeSensorName)
         users.get("info", use: info)
     }
     
@@ -73,12 +74,25 @@ struct UserController: RouteCollection {
             throw Abort(.badRequest, reason: "Can't have more than 5 sensors")
         }
         
+        guard let name = req.body.string, !name.isEmpty else {
+            throw Abort(.badRequest, reason: "Body must contain a valid String for Name")
+        }
+        
         return try await req.db.transaction { db in
             guard let userID = user.id else {
                 throw Abort(.internalServerError, reason: "User doesn't have ID") //shouldn't happen
             }
             
-            let sensor = Sensor(owner: userID)
+            let existingSensor = try await Sensor.query(on: db)
+                .filter(\.$name == name)
+                .filter(\.$owner == userID)
+                .first()
+            
+            if existingSensor != nil {
+                throw Abort(.badRequest, reason: "Sensor with that name already exists")
+            }
+            
+            let sensor = Sensor(name: name, owner: userID)
             try await sensor.save(on: db)
             
             guard let id = sensor.id else {
@@ -92,16 +106,56 @@ struct UserController: RouteCollection {
         }
     }
     
-    @Sendable func sensors(req: Request) async throws -> String {
+    @Sendable func changeSensorName(req: Request) async throws -> String {
+        let payload = try await req.jwt.verify(as: JWTUserPayload.self)
+        
+        guard let idStr = try? req.parameters.require("id"), let uuid = UUID(uuidString: idStr) else {
+            throw Abort(.badRequest, reason: "Path id is either empty or not convertible to UUID")
+        }
+        
+        guard let id = UUID(uuidString: payload.subject.value) else {
+            throw Abort(.internalServerError, reason: "User doesn't have ID")
+        }
+        
+        guard let sensor = try await Sensor.query(on: req.db)
+            .filter(\.$id == uuid)
+            .filter(\.$owner == id)
+            .first() else {
+            throw Abort(.badRequest, reason: "User has no sensor with the given ID")
+        }
+        
+        guard let name = req.body.string, !name.isEmpty else {
+            throw Abort(.badRequest, reason: "Body must contain a valid String for Name")
+        }
+        
+        sensor.name = name
+        
+        try await sensor.save(on: req.db)
+        
+        return name
+    }
+    
+    @Sendable func sensors(req: Request) async throws -> Response {
         let payload = try await req.jwt.verify(as: JWTUserPayload.self)
         
         guard let id = UUID(uuidString: payload.subject.value), let user = try await User.query(on: req.db).filter(\.$id == id).first() else {
             throw Abort(.internalServerError, reason: "fetching user failed")
         }
         
-        return user.sensors.map {
-            $0.uuidString
-        }.joined(separator: ",")
+        let sensors = try await Sensor.query(on: req.db)
+            .filter(\.$owner == id)
+            .filter(\.$id ~~ user.sensors)
+            .all()
+        
+        let response: [[String: String?]] = sensors.map { sensor in
+            var dict: [String: String?] = [:]
+            dict["id"] = sensor.id?.uuidString
+            dict["name"] = sensor.name
+            return dict
+        }
+        
+        let data = try JSONEncoder().encode(response)
+        return Response(status: .ok, body: .init(data: data))
     }
     
     @Sendable func sensor(req: Request) async throws -> String {

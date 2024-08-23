@@ -12,6 +12,7 @@ struct SensorMigration: AsyncMigration {
     func prepare(on database: Database) async throws {
         try await database.schema("sensors")
             .id()
+            .field("name", .string, .required)
             .field("latest", .double)
             .field("updated", .int)
             .field("owner", .uuid, .required)
