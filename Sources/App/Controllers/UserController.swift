@@ -119,7 +119,7 @@ struct UserController: RouteCollection {
             .filter(\.$owner == id)
             .all()
         
-        guard let sensor = sensors.first(where: {$0.id == id}) else {
+        guard let sensor = sensors.first(where: {$0.id == uuid}) else {
             throw Abort(.badRequest, reason: "User has no sensor with the given ID")
         }
         
