@@ -74,9 +74,7 @@ struct UserController: RouteCollection {
             throw Abort(.badRequest, reason: "Can't have more than 5 sensors")
         }
         
-        guard let name = req.body.string, !name.isEmpty else {
-            throw Abort(.badRequest, reason: "Body must contain a valid String for Name")
-        }
+        let name = try req.content.decode(JSONSensor.self)
         
         return try await req.db.transaction { db in
             guard let userID = user.id else {
@@ -84,7 +82,7 @@ struct UserController: RouteCollection {
             }
             
             let existingSensor = try await Sensor.query(on: db)
-                .filter(\.$name == name)
+                .filter(\.$name == name.name)
                 .filter(\.$owner == userID)
                 .first()
             
@@ -92,7 +90,7 @@ struct UserController: RouteCollection {
                 throw Abort(.badRequest, reason: "Sensor with that name already exists")
             }
             
-            let sensor = Sensor(name: name, owner: userID)
+            let sensor = Sensor(name: name.name, owner: userID)
             try await sensor.save(on: db)
             
             guard let id = sensor.id else {
