@@ -115,15 +115,20 @@ struct UserController: RouteCollection {
             throw Abort(.internalServerError, reason: "User doesn't have ID")
         }
         
-        guard let sensor = try await Sensor.query(on: req.db)
-            .filter(\.$id == uuid)
+        let sensors = try await Sensor.query(on: req.db)
             .filter(\.$owner == id)
-            .first() else {
+            .all()
+        
+        guard let sensor = sensors.first(where: {$0.id == id}) else {
             throw Abort(.badRequest, reason: "User has no sensor with the given ID")
         }
         
         guard let name = req.body.string, !name.isEmpty else {
             throw Abort(.badRequest, reason: "Body must contain a valid String for Name")
+        }
+        
+        guard !sensors.contains(where: {$0.name == name}) else {
+            throw Abort(.badRequest, reason: "Sensor with that name already exists")
         }
         
         sensor.name = name
