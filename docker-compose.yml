@@ -27,11 +27,15 @@ x-shared_environment: &shared_environment
   DATABASE_NAME: vapor_database
   DATABASE_USERNAME: vapor_username
   DATABASE_PASSWORD: vapor_password
+  APNS_KEY_PATH=/app/key.p8
   JWT_KEY: ''
 
 services:
   app:
     image: bloom-buddy-server:latest
+    container_name: BloomBuddyServer
+    volumes:
+      - ./key.p8:/app/key.p8:ro
     build:
       context: .
     environment:

@@ -9,4 +9,5 @@ import Foundation
 
 struct JSONSensor: Codable {
     let name: String
+    let model: Int
 }

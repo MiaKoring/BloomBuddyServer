@@ -39,21 +39,33 @@ struct SensorController: RouteCollection {
             .filter(\.$id == id)
             .filter(\.$owner == owner)
             .first() else {
-            throw Abort(.notFound)
+            throw Abort(.notFound, reason: "no sensor with matching id found")
         }
         
-        guard let body = req.body.string, let double = Double(body) else {
-            throw Abort(.badRequest, reason: "Invalid Value: Not conform to Double")
+        guard let body = req.body.string else {
+            throw Abort(.badRequest, reason: "Invalid Value: Body is empty")
+        }
+        let numbers = body.split(separator: " ").map({Double("\($0)")})
+        
+        guard !numbers.contains(nil) || !numbers.isEmpty else {
+            throw Abort(.badRequest, reason: "Invalid Value: Not convertible to double")
         }
         
         let updated = Int(Date().timeIntervalSinceReferenceDate)
         
         try await req.db.transaction { db in
             sensor.updated = updated
-            sensor.latest = double
+            sensor.latest = numbers[0]
+            if numbers.count > 1, let num = numbers[1] {
+                sensor.battery = Int(num)
+            } else {
+                sensor.battery = nil
+            }
             try await sensor.save(on: db)
         }
         
-        return "\(updated):\(double)"
+        try? await NotificationController.sendBackgroundNotification(req, to: owner, data: SensorData(id: id, name: sensor.name, sensor: numbers[0], battery: sensor.battery, model: sensor.model))
+        
+        return "\(updated):\(numbers[0] ?? 0)"
     }
 }
