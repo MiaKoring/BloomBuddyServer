@@ -47,6 +47,8 @@ services:
     # user: '0' # uncomment to run as root for testing purposes even though Dockerfile defines 'vapor'>
     command: ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8081"]
   migrate:
+      volumes:
+      - ./key.p8:/app/key.p8:ro
     image: bloom-buddy-server:latest
     build:
       context: .
