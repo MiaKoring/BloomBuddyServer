@@ -15,11 +15,17 @@ final class Sensor: Model, Authenticatable {
     @ID(key: .id)
     var id: UUID?
     
+    @Field(key: "model")
+    var model: SensorModel
+    
     @Field(key: "name")
     var name: String
     
     @Field(key: "latest")
     var latest: Double?
+    
+    @Field(key: "battery")
+    var battery: Int?
     
     @Field(key: "updated")
     var updated: Int?
@@ -29,10 +35,12 @@ final class Sensor: Model, Authenticatable {
     
     init() { }
     
-    init(id: UUID? = nil, name: String, latest: Double? = nil, updated: Int? = nil, owner: UUID) {
+    init(id: UUID? = nil, model: Int? = nil, name: String, latest: Double? = nil, battery: Int? = nil, updated: Int? = nil, owner: UUID) {
         self.id = id
+        self.model = SensorModel(rawValue: model ?? 0) ?? .diy
         self.name = name
         self.latest = latest
+        self.battery = battery
         self.updated = updated
         self.owner = owner
     }

@@ -32,6 +32,11 @@ x-shared_environment: &shared_environment
 services:
   app:
     image: bloom-buddy-server:latest
+    container_name: BloomBuddyServer
+    volumes:
+      - ./key.p8:/app/key.p8:ro
+    environment:
+      - APNS_KEY_PATH=/app/key.p8
     build:
       context: .
     environment:
