@@ -10,6 +10,24 @@ func routes(_ app: Application) throws {
         "Hello, world!"
     }
     
+    app.get(".well-known", "apple-app-site-association") { req async -> String in
+        """
+            {
+              "applinks": {
+                "apps": [],
+                "details": [
+                  {
+                    "appID": "68YWPYV749.de.touchthegrass.BloomBuddy",
+                    "paths": [
+                      "/faq/images/*"
+                    ]
+                  }
+                ]
+              }
+            }
+        """
+    }
+    
     try app.register(collection: UserController())
     try app.register(collection: SensorController())
     
