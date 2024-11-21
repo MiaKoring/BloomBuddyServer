@@ -53,6 +53,8 @@ struct SensorController: RouteCollection {
         
         let updated = Int(Date().timeIntervalSinceReferenceDate)
         
+        print("\n\n\n\(numbers)\n\n\n")
+        
         try await req.db.transaction { db in
             sensor.updated = updated
             sensor.latest = numbers[0]
