@@ -15,6 +15,7 @@ struct UserMigration: AsyncMigration {
             .field("name", .string, .required)
             .field("password", .string, .required)
             .field("sensorIDs", .array(of: .uuid), .required)
+            .field("created", .double, .required)
             .create()
     }
 

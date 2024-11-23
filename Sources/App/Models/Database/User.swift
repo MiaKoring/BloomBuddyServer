@@ -24,6 +24,9 @@ final class User: Model {
     @Field(key: "sensorIDs")
     var sensors: [UUID]
     
+    @Field(key: "created")
+    var created: Double
+    
     init() { }
     
     init(id: UUID? = nil, name: String, password: String, sensors: [UUID] = []) {
@@ -31,6 +34,7 @@ final class User: Model {
         self.name = name
         self.password = password
         self.sensors = sensors
+        self.created = Date().timeIntervalSinceReferenceDate
     }
     
     static func exists(name: String, req: Request) async throws -> Bool {

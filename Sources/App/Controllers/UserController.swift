@@ -17,6 +17,8 @@ struct UserController: RouteCollection {
         users.post(use: create)
         authenticated.post("login", use: login)
         users.get("info", use: info)
+        users.patch("name", use: changeName)
+        users.patch("password", use: changePassword)
         users.delete(use: delete)
         
         users.post("sensors", use: addSensor)
@@ -68,6 +70,54 @@ struct UserController: RouteCollection {
         }
         
         return try await JWT.jwt(req: req, name: user.name, id: id)
+    }
+    
+    @Sendable func changeName(req: Request) async throws -> String {
+        let id = try await checkJWT(req: req)
+        guard let user = try await User.query(on: req.db).filter(\.$id == id).first() else {
+            throw Abort(.internalServerError, reason: "fetching user failed")
+        }
+        
+        let name = try req.content.decode(Name.self)
+        
+        if try await User.exists(name: name.name, req: req) { throw Abort(.badRequest, reason: "User with that name already exists")}
+        
+        user.name = name.name
+        try await user.save(on: req.db)
+                        
+        return name.name
+        
+        struct Name: Codable {
+            let name: String
+        }
+    }
+    
+    @Sendable func changePassword(req: Request) async throws -> String {
+        let id = try await checkJWT(req: req)
+        guard let user = try await User.query(on: req.db).filter(\.$id == id).first() else {
+            throw Abort(.internalServerError, reason: "fetching user failed")
+        }
+        
+        let password = try req.content.decode(Password.self)
+        
+        guard try Bcrypt.verify(password.old, created: user.password) else {
+            throw Abort(.unauthorized)
+        }
+        
+        let pwHashed = try Bcrypt.hash(password.new)
+        if try !Bcrypt.verify(password.new, created: pwHashed) {
+            throw Abort(.custom(code: 500, reasonPhrase: "Error while hashing password"))
+        }
+        
+        user.password = pwHashed
+        try await user.save(on: req.db)
+        
+        return "success"
+        
+        struct Password: Codable {
+            let old: String
+            let new: String
+        }
     }
     
     @Sendable func addSensor(req: Request) async throws -> String {
